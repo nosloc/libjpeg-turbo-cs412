@@ -30,12 +30,12 @@
    as well as the GIF and Targa readers. */
 
 #define main  cjpeg_main
-// #define CJPEG_FUZZER
+#define CJPEG_FUZZER
 extern "C" {
 #include "../src/cjpeg.c"
 }
 #undef main
-// #undef CJPEG_FUZZER
+#undef CJPEG_FUZZER
 
 #include <stdint.h>
 #include <unistd.h>
