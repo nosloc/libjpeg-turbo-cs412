@@ -228,9 +228,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         goto bailout;
       }    
   }
-  free(dstBufs[0]);
-  free(dstBufs[1]);
-  dstBufs[0] = NULL;
 
 bailout:
 free(dstBufs[0]);
