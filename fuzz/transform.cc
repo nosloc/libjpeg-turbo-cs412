@@ -67,13 +67,13 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
   memset(&transforms[0], 0, sizeof(tjtransform));
 
-  
   // Here we add our new code to fuzz more transform operations
   transforms[0].r.w = (height + 1) / 2;
   transforms[0].r.h = (width + 1) / 2;
   transforms[0].op = TJXOP_TRANSVERSE;
-  transforms[0].options = TJXOPT_GRAY | TJXOPT_CROP | TJXOPT_COPYNONE |
-                          TJXOPT_OPTIMIZE;
+  // options of transpose + options of a rotation 
+  transforms[0].options = TJXOPT_GRAY | TJXOPT_CROP | TJXOPT_COPYNONE | 
+                          TJXOPT_OPTIMIZE | TJXOPT_TRIM | TJXOPT_ARITHMETIC;
   dstSizes[0] = maxBufSize = tj3TransformBufSize(handle, &transforms[0]);
   if (dstSizes[0] == 0 ||
       (dstBufs[0] = (unsigned char *)tj3Alloc(dstSizes[0])) == NULL)
