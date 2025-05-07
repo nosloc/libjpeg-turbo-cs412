@@ -93,7 +93,32 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   free(dstBufs[0]);
   dstBufs[0] = NULL;
 
+  // Here we add our new code to fuzz more transform operations
+
+  /** ROTATION OF 180° */
   transforms[0].op = TJXOP_ROT180;
+  transforms[0].options = TJXOPT_TRIM | TJXOPT_ARITHMETIC;
+  dstSizes[0] = maxBufSize = tj3TransformBufSize(handle, &transforms[0]);
+  if (dstSizes[0] == 0 ||
+      (dstBufs[0] = (unsigned char *)tj3Alloc(dstSizes[0])) == NULL)
+    goto bailout;
+
+  if (tj3Transform(handle, data, size, 1, dstBufs, dstSizes,
+                   transforms) == 0) {
+    size_t sum = 0;
+
+    for (i = 0; i < dstSizes[0]; i++)
+      sum += dstBufs[0][i];
+
+    if (sum > 255 * maxBufSize)
+      goto bailout;
+  }
+
+  free(dstBufs[0]);
+  dstBufs[0] = NULL;
+
+  /** ROTATION OF 270° */
+  transforms[0].op = TJXOP_ROT270;
   transforms[0].options = TJXOPT_TRIM | TJXOPT_ARITHMETIC;
   dstSizes[0] = maxBufSize = tj3TransformBufSize(handle, &transforms[0]);
   if (dstSizes[0] == 0 ||
@@ -118,8 +143,6 @@ bailout:
   free(dstBufs[0]);
   tj3Destroy(handle);
   return 0;
-
-  // Here we add our new code to fuzz more transform operations
   
   /** TRANSVERSE TRANSFORMATION */
   //transforms[0].r.w = (height + 1) / 2;
