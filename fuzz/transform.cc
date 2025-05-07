@@ -122,7 +122,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   dstBufs[0] = NULL;
 
 bailout:
-  free(dstBufs[0]);
+  if (dstBufs[0]) {
+    free(dstBufs[0]);
+    dstBufs[0] = NULL;
+  }
   tj3Destroy(handle);
   return 0;
 }
