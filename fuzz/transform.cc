@@ -220,22 +220,21 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
                   transforms) == 0) {
     /* Touch all of the output pixels in order to catch uninitialized reads
       when using MemorySanitizer. */
-    for(int j = 0; j < 2; ++j) {
+    for (int j = 0; j < 2; ++j) {
       size_t sum = 0;
       for (i = 0; i < dstSizes[j]; i++)
         sum += dstBufs[j][i];
-      /* Prevent the code above from being optimized out.  This test should
-      never be true, but the compiler doesn't know that. */
       if (sum > 255 * maxBufSize)
         goto bailout;
-    }
-                    
+      }    
   }
   free(dstBufs[0]);
+  free(dstBufs[1]);
   dstBufs[0] = NULL;
 
 bailout:
 free(dstBufs[0]);
+free(dstBufs[1]);
 tj3Destroy(handle);
 return 0;
 
