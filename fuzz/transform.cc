@@ -233,7 +233,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     goto bailout;
 
   tj3Set(handle, TJPARAM_NOREALLOC, 1);
-  if (tj3Transform(handle, data, size, 1, dstBufs, dstSizes,
+  if (tj3Transform(handle, data, size, 2, dstBufs, dstSizes,
                   transforms) == 0) {
     /* Touch all of the output pixels in order to catch uninitialized reads
       when using MemorySanitizer. */
