@@ -285,6 +285,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         goto bailout;
       }    
   }
+  free(dstBufs[0]);
+  dstBufs[0] = NULL;
+  free(dstBufs[1]);
+  dstBufs[1] = NULL;
 
   transforms[0].op = TJXOP_NONE;
   transforms[0].options = TJXOPT_PROGRESSIVE;
