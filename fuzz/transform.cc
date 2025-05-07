@@ -66,11 +66,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     jpegSubsamp = TJSAMP_444;
 
   memset(&transforms[0], 0, sizeof(tjtransform));
+
   
   // Here we add our new code to fuzz more transform operations
   transforms[0].r.w = (height + 1) / 2;
   transforms[0].r.h = (width + 1) / 2;
-  transforms[0].op = JXFORM_TRANSVERSE;
+  transforms[0].op = TJXOP_TRANSVERSE;
   transforms[0].options = TJXOPT_GRAY | TJXOPT_CROP | TJXOPT_COPYNONE |
                           TJXOPT_OPTIMIZE;
   dstSizes[0] = maxBufSize = tj3TransformBufSize(handle, &transforms[0]);
