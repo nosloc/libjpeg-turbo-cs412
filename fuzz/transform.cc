@@ -101,7 +101,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   //dstBufs[0] = NULL;
 
   /** ROT180 TRANSFORMATION */
-  transforms[0].op = TJXOP_ROT180;
+  transforms[0].op = TJXOP_ROT270;
   transforms[0].options = TJXOPT_TRIM | TJXOPT_ARITHMETIC;
   dstSizes[0] = maxBufSize = tj3TransformBufSize(handle, &transforms[0]);
   if (dstSizes[0] == 0 ||
@@ -122,10 +122,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   dstBufs[0] = NULL;
 
 bailout:
-  if (dstBufs[0]) {
-    free(dstBufs[0]);
-    dstBufs[0] = NULL;
-  }
+  free(dstBufs[0]);
   tj3Destroy(handle);
   return 0;
 }
