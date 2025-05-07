@@ -208,7 +208,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     goto bailout;
 
   tj3Set(handle, TJPARAM_NOREALLOC, 1);
-  if (tj3Transform(handle, data, size, 2, dstBufs, dstSizes,
+  if (tj3Transform(handle, data, size, 1, dstBufs, dstSizes,
                   transforms) == 0) {
     /* Touch all of the output pixels in order to catch uninitialized reads
        when using MemorySanitizer. */
@@ -224,7 +224,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   }
   free(dstBufs[0]);
   dstBufs[0] = NULL;
-  
+
   /** HORIZONTAL FLIP TRANSFORMATION WITH CROP*/
   transforms[0].r.w = (height + 1) / 2; 
   transforms[0].r.h = (width + 1) / 2;
@@ -259,9 +259,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   }
 
 bailout:
-free(dstBufs[0]);
-free(dstBufs[1]);
-tj3Destroy(handle);
-return 0;
+  free(dstBufs[0]);
+  free(dstBufs[1]);
+  tj3Destroy(handle);
+  return 0;
 
 }
