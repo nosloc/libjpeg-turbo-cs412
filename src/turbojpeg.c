@@ -2924,8 +2924,8 @@ DLLEXPORT int tj3Transform(tjhandle handle, const unsigned char *jpegBuf,
     if (xinfo[i].crop) {
       if (t[i].r.x < 0 || t[i].r.y < 0 || t[i].r.w < 0 || t[i].r.h < 0)
         THROW("Invalid cropping region");
-      xinfo[i].x_crop_offset = t[i].r.x;  xinfo[i].crop_xoffset_set = JCROP_POS;
-      xinfo[i].y_crop_offset = t[i].r.y;  xinfo[i].crop_yoffset_set = JCROP_POS;
+      xinfo[i].crop_xoffset = t[i].r.x;  xinfo[i].crop_xoffset_set = JCROP_POS;
+      xinfo[i].crop_yoffset = t[i].r.y;  xinfo[i].crop_yoffset_set = JCROP_POS;
       if (t[i].r.w != 0) {
         xinfo[i].crop_width = t[i].r.w;  xinfo[i].crop_width_set = JCROP_POS;
       } else
