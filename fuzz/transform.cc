@@ -39,7 +39,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   size_t dstSizes[2] = { 0, 0 }, maxBufSize, i;
   int width = 0, height = 0, jpegSubsamp;
   tjtransform transforms[2];
-  int i;
 
   if ((handle = tj3Init(TJINIT_TRANSFORM)) == NULL)
     goto bailout;
