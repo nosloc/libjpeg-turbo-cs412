@@ -164,7 +164,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   }
   free(dstBufs[0]);
   dstBufs[0] = NULL;
-  
+
   /** TRANSVERSE TRANSFORMATION */
   transforms[0].r.w = (height + 1) / 2;
   transforms[0].r.h = (width + 1) / 2;
@@ -196,6 +196,37 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   free(dstBufs[0]);
   dstBufs[0] = NULL;
 
+  /** HORIZONTAL FLIP TRANSFORMATION WITH CROP*/
+  transforms[0].r.w = (height + 1) / 2; 
+  transforms[0].r.h = (width + 1) / 2;
+  transforms[0].op = TJXOP_HFLIP;
+  transforms[0].options =  TJXOPT_GRAY | TJXOPT_CROP | TJXOPT_COPYNONE | TJXOPT_OPTIMIZE | TJXOPT_TRIM ;
+
+  transforms[1].op = TJXOP_ROT180;
+  transforms[1].options = TJXOPT_TRIM | TJXOPT_ARITHMETIC;
+
+  dstSizes[0] = maxBufSize = tj3TransformBufSize(handle, &transforms[0]);
+  if (dstSizes[0] == 0 ||
+      (dstBufs[0] = (unsigned char *)tj3Alloc(dstSizes[0])) == NULL)
+    goto bailout;
+
+  tj3Set(handle, TJPARAM_NOREALLOC, 1);
+  if (tj3Transform(handle, data, size, 2, dstBufs, dstSizes,
+                  transforms) == 0) {
+    /* Touch all of the output pixels in order to catch uninitialized reads
+      when using MemorySanitizer. */
+    size_t sum = 0;
+
+    for (i = 0; i < dstSizes[0]; i++)
+      sum += dstBufs[0][i];
+
+    /* Prevent the code above from being optimized out.  This test should
+      never be true, but the compiler doesn't know that. */
+    if (sum > 255 * maxBufSize)
+      goto bailout;
+  }
+  free(dstBufs[0]);
+  dstBufs[0] = NULL;
 
 bailout:
 free(dstBufs[0]);
