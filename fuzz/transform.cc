@@ -67,6 +67,34 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
   memset(&transforms[0], 0, sizeof(tjtransform));
 
+
+
+  transforms[0].op = TJXOP_ROT90;
+  transforms[0].options = TJXOPT_TRIM | TJXOPT_ARITHMETIC;
+  dstSizes[0] = maxBufSize = tj3TransformBufSize(handle, &transforms[0]);
+  if (dstSizes[0] == 0 ||
+      (dstBufs[0] = (unsigned char *)tj3Alloc(dstSizes[0])) == NULL)
+    goto bailout;
+
+  if (tj3Transform(handle, data, size, 1, dstBufs, dstSizes,
+                   transforms) == 0) {
+    size_t sum = 0;
+
+    for (i = 0; i < dstSizes[0]; i++)
+      sum += dstBufs[0][i];
+
+    if (sum > 255 * maxBufSize)
+      goto bailout;
+  }
+
+  free(dstBufs[0]);
+  dstBufs[0] = NULL;
+
+bailout:
+  free(dstBufs[0]);
+  tj3Destroy(handle);
+  return 0;
+
   // Here we add our new code to fuzz more transform operations
   
   /** TRANSVERSE TRANSFORMATION */
@@ -100,29 +128,5 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   //free(dstBufs[0]);
   //dstBufs[0] = NULL;
 
-  /** ROT180 TRANSFORMATION */
-  transforms[0].op = TJXOP_ROT90;
-  transforms[0].options = TJXOPT_TRIM | TJXOPT_ARITHMETIC;
-  dstSizes[0] = maxBufSize = tj3TransformBufSize(handle, &transforms[0]);
-  if (dstSizes[0] == 0 ||
-      (dstBufs[0] = (unsigned char *)tj3Alloc(dstSizes[0])) == NULL)
-    goto bailout;
 
-  if (tj3Transform(handle, data, size, 1, dstBufs, dstSizes,
-                   transforms) == 0) {
-    size_t sum = 0;
-
-    for (i = 0; i < dstSizes[0]; i++)
-      sum += dstBufs[0][i];
-
-    if (sum > 255 * maxBufSize)
-      goto bailout;
-  }
-  free(dstBufs[0]);
-  dstBufs[0] = NULL;
-
-bailout:
-  free(dstBufs[0]);
-  tj3Destroy(handle);
-  return 0;
 }
