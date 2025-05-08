@@ -4,14 +4,22 @@
 #include <stdint.h>
 #include <string.h>
 //#include <jpegint.h>
-#include <jpeglib.h>
+//#include <jpeglib.h>
 
+#define NUMPF  4
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
+
+    // Make a writable copy
+    uint8_t *mutable_data = (uint8_t *)malloc(size);
+    if (!mutable_data) return 0;
+    memcpy(mutable_data, data, size);
+
     tjhandle handle = NULL;
-    void *dstBuf = NULL;
+    unsigned char *dstBuf = NULL; unsigned char *yuvBuf = NULL;
     int width = 0, height = 0, precision, sampleSize, pfi;
+    int jpegSubsamp = 0;
     /* TJPF_RGB-TJPF_BGR share the same code paths, as do TJPF_RGBX-TJPF_XRGB and
         TJPF_RGBA-TJPF_ARGB.  Thus, the pixel formats below should be the minimum
         necessary to achieve full coverage. */
@@ -37,10 +45,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         goto bailout;
 
     tj3Set(handle, TJPARAM_SCANLIMIT, 500);
-    GET_INSTANCE(handle);
-
-
-    jpeg_set_defaults(handle->cinfo);
+    //GET_INSTANCE(handle);
+    //jpeg_set_defaults(handle->cinfo);
 
     for (pfi = 0; pfi < NUMPF; pfi++) {
         int w = width, h = height;
@@ -68,8 +74,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
              (unsigned char *)tj3Alloc(tj3YUVBufSize(w, 1, h,
                                                      jpegSubsamp))) == NULL)
           goto bailout;
-    
-        if (tjDecompressToYUV(handle, data, size, yuvBuf, 2048) == 0 &&
+        
+        //(tjhandle*)handle->cinfo->quantize_color = TRUE;
+
+        if (tjDecompressToYUV(handle, mutable_data, size, yuvBuf, 2048) == 0 &&
             tjDecodeYUV(handle, yuvBuf, 1, 3, dstBuf, w, 0, h, pf, 2048) == 0) {
           /* Touch all of the output pixels in order to catch uninitialized reads
              when using MemorySanitizer. */
@@ -105,6 +113,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     bailout:
         free(dstBuf);
         free(yuvBuf);
+        free(mutable_data);
         tj3Destroy(handle);
         return 0;
 
