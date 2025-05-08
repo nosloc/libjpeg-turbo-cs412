@@ -12,9 +12,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
 
     // Make a writable copy
-    uint8_t *mutable_data = (uint8_t *)malloc(size*8);
+    uint8_t *mutable_data = (uint8_t *)malloc(size * sizeof(uint8_t));
     if (!mutable_data) return 0;
-    memcpy(mutable_data, data, size*8);
+    memcpy(mutable_data, data, size);
 
     tjhandle handle = NULL;
     unsigned char *dstBuf = NULL; unsigned char *yuvBuf = NULL;
