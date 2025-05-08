@@ -12,9 +12,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
 
     // Make a writable copy
-    uint8_t *mutable_data = (uint8_t *)malloc(size);
-    if (!mutable_data) return 0;
-    memcpy(mutable_data, data, size);
+    //uint8_t *mutable_data = (uint8_t *)malloc(size);
+    //if (!mutable_data) return 0;
+    //memcpy(mutable_data, data, size);
 
     tjhandle handle = NULL;
     unsigned char *dstBuf = NULL; unsigned char *yuvBuf = NULL;
@@ -77,7 +77,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         
         //(tjhandle*)handle->cinfo->quantize_color = TRUE;
 
-        if (tjDecompressToYUV(handle, mutable_data, size, yuvBuf, 2048) == 0 &&
+        if (tjDecompressToYUV(handle, const_cast<uint8_t*>(data), size, yuvBuf, 2048) == 0 &&
             tjDecodeYUV(handle, yuvBuf, 1, 3, dstBuf, w, 0, h, pf, 2048) == 0) {
           /* Touch all of the output pixels in order to catch uninitialized reads
              when using MemorySanitizer. */
@@ -113,7 +113,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     bailout:
         free(dstBuf);
         free(yuvBuf);
-        free(mutable_data);
+        //free(mutable_data);
         tj3Destroy(handle);
         return 0;
 
