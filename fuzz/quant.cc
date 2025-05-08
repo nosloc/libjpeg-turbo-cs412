@@ -117,5 +117,84 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     //     tj3Destroy(handle);
     //     return 0;
 
+    tjhandle handle = NULL;
+    unsigned char *dstBuf = NULL, *yuvBuf = NULL;
+    int width = 0, height = 0, jpegSubsamp, pfi;
+    /* TJPF_RGB-TJPF_BGR share the same code paths, as do TJPF_RGBX-TJPF_XRGB and
+       TJPF_RGBA-TJPF_ARGB.  Thus, the pixel formats below should be the minimum
+       necessary to achieve full coverage. */
+    enum TJPF pixelFormats[NUMPF] =
+      { TJPF_BGR, TJPF_XRGB, TJPF_GRAY };
+  
+    if ((handle = tj3Init(TJINIT_DECOMPRESS)) == NULL)
+      goto bailout;
+  
+    /* We ignore the return value of tj3DecompressHeader(), because malformed
+       JPEG images that might expose issues in libjpeg-turbo might also have
+       header errors that cause tj3DecompressHeader() to fail. */
+    tj3DecompressHeader(handle, data, size);
+    width = tj3Get(handle, TJPARAM_JPEGWIDTH);
+    height = tj3Get(handle, TJPARAM_JPEGHEIGHT);
+    jpegSubsamp = tj3Get(handle, TJPARAM_SUBSAMP);
+  
+    /* Ignore 0-pixel images and images larger than 1 Megapixel.  Casting width
+       to (uint64_t) prevents integer overflow if width * height > INT_MAX. */
+    if (width < 1 || height < 1 || (uint64_t)width * height > 1048576)
+      goto bailout;
+  
+    tj3Set(handle, TJPARAM_SCANLIMIT, 500);
+  
+    for (pfi = 0; pfi < NUMPF; pfi++) {
+      int w = width, h = height;
+      int pf = pixelFormats[pfi], i, sum = 0;
+  
+      /* Test non-default decompression options on the first iteration. */
+      if (!tj3Get(handle, TJPARAM_LOSSLESS)) {
+        tj3Set(handle, TJPARAM_BOTTOMUP, pfi == 0);
+        tj3Set(handle, TJPARAM_FASTUPSAMPLE, pfi == 0);
+        tj3Set(handle, TJPARAM_FASTDCT, pfi == 0);
+  
+        /* Test IDCT scaling on the second iteration. */
+        if (pfi == 1) {
+          tjscalingfactor sf = { 3, 4 };
+          tj3SetScalingFactor(handle, sf);
+          w = TJSCALED(width, sf);
+          h = TJSCALED(height, sf);
+        } else
+          tj3SetScalingFactor(handle, TJUNSCALED);
+      }
+  
+      if ((dstBuf = (unsigned char *)tj3Alloc(w * h * tjPixelSize[pf])) == NULL)
+        goto bailout;
+      if ((yuvBuf =
+           (unsigned char *)tj3Alloc(tj3YUVBufSize(w, 1, h,
+                                                   jpegSubsamp))) == NULL)
+        goto bailout;
+  
+      if (tj3DecompressToYUV8(handle, data, size, yuvBuf, 1) == 0 &&
+          tj3DecodeYUV8(handle, yuvBuf, 1, dstBuf, w, 0, h, pf) == 0) {
+        /* Touch all of the output pixels in order to catch uninitialized reads
+           when using MemorySanitizer. */
+        for (i = 0; i < w * h * tjPixelSize[pf]; i++)
+          sum += dstBuf[i];
+      } else
+        goto bailout;
+  
+      free(dstBuf);
+      dstBuf = NULL;
+      free(yuvBuf);
+      yuvBuf = NULL;
+  
+      /* Prevent the code above from being optimized out.  This test should never
+         be true, but the compiler doesn't know that. */
+      if (sum > 255 * 1048576 * tjPixelSize[pf])
+        goto bailout;
+    }
+  
+  bailout:
+    free(dstBuf);
+    free(yuvBuf);
+    tj3Destroy(handle);
+    return 0;
 }
 
