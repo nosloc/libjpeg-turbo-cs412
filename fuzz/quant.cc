@@ -77,7 +77,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         
         //(tjhandle*)handle->cinfo->quantize_color = TRUE;
 
-        if (tjDecompressToYUVPlanes(handle, mutable_data, size, yuvBuf, 2048) == 0 &&
+        if (tjDecompressToYUV(handle, mutable_data, size, yuvBuf, 2048) == 0 &&
             tjDecodeYUV(handle, yuvBuf, 1, 3, dstBuf, w, 0, h, pf, 2048) == 0) {
           /* Touch all of the output pixels in order to catch uninitialized reads
              when using MemorySanitizer. */
