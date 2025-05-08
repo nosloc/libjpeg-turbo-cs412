@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-#include <jpegint.h>
+//#include <jpegint.h>
 #include <jpeglib.h>
 
 
@@ -42,6 +42,53 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     jpeg_set_defaults(handle->cinfo);
 
+    for (pfi = 0; pfi < NUMPF; pfi++) {
+        int w = width, h = height;
+        int pf = pixelFormats[pfi], i, sum = 0;
+    
+        /* Test non-default decompression options on the first iteration. */
+        if (!tj3Get(handle, TJPARAM_LOSSLESS)) {
+          tj3Set(handle, TJPARAM_BOTTOMUP, pfi == 0);
+          tj3Set(handle, TJPARAM_FASTUPSAMPLE, pfi == 0);
+          tj3Set(handle, TJPARAM_FASTDCT, pfi == 0);
+    
+          /* Test IDCT scaling on the second iteration. */
+          if (pfi == 1) {
+            tjscalingfactor sf = { 3, 4 };
+            tj3SetScalingFactor(handle, sf);
+            w = TJSCALED(width, sf);
+            h = TJSCALED(height, sf);
+          } else
+            tj3SetScalingFactor(handle, TJUNSCALED);
+        }
+    
+        if ((dstBuf = (unsigned char *)tj3Alloc(w * h * tjPixelSize[pf])) == NULL)
+          goto bailout;
+        if ((yuvBuf =
+             (unsigned char *)tj3Alloc(tj3YUVBufSize(w, 1, h,
+                                                     jpegSubsamp))) == NULL)
+          goto bailout;
+    
+        if (tjDecompressToYUV(handle, data, size, yuvBuf, 2048) == 0 &&
+            tjDecodeYUV(handle, yuvBuf, 1, 3, dstBuf, w, 0, h, pf, 2048) == 0) {
+          /* Touch all of the output pixels in order to catch uninitialized reads
+             when using MemorySanitizer. */
+          for (i = 0; i < w * h * tjPixelSize[pf]; i++)
+            sum += dstBuf[i];
+        } else
+          goto bailout;
+    
+        free(dstBuf);
+        dstBuf = NULL;
+        free(yuvBuf);
+        yuvBuf = NULL;
+    
+        /* Prevent the code above from being optimized out.  This test should never
+           be true, but the compiler doesn't know that. */
+        if (sum > 255 * 1048576 * tjPixelSize[pf])
+          goto bailout;
+      }
+    /**
     handle->cinfo->data_precision = 8;
     hanlde->cinfo->master->lossless = 0;
     cinfo->out_color_components = 4; 
@@ -54,11 +101,12 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     // (*cinfo->post->start_pass) (cinfo, JBUF_CRANK_DEST);
     // (*cinfo->main->start_pass) (cinfo, JBUF_CRANK_DEST);
     // start_pass, new_color_map, finish_pass, _color_quantize
-
+    */
     bailout:
+        free(dstBuf);
+        free(yuvBuf);
         tj3Destroy(handle);
         return 0;
-
 
 }
 
