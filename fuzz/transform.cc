@@ -290,8 +290,8 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
   dstBufs[1] = NULL;
 
   /** NONE WITH CROPPING */
-  transforms[0].r.w = (height + 1) / 2; 
-  transforms[0].r.h = (width + 1) / 2;
+  transforms[0].r.w = 10000000000000000000;
+  transforms[0].r.h = 10000000000000000000;
   transforms[0].op = TJXOP_NONE;
   transforms[0].options = TJXOPT_PROGRESSIVE | TJXOPT_COPYNONE | TJXOPT_CROP;
   dstSizes[0] = maxBufSize = tj3TransformBufSize(handle, &transforms[0]);
