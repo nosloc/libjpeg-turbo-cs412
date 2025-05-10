@@ -713,7 +713,7 @@ if(WITH_TURBOJPEG)
     add_library(turbojpeg SHARED ${TURBOJPEG_SOURCES}
       $<TARGET_OBJECTS:turbojpeg12> $<TARGET_OBJECTS:turbojpeg16>)
     set_property(TARGET turbojpeg PROPERTY COMPILE_FLAGS
-      "-DBMP_SUPPORTED -DPPM_SUPPORTED -DGIF_SUPPORTED -DTARGA_SUPPORTED") #modified
+      "-DBMP_SUPPORTED -DPPM_SUPPORTED")
     if(WIN32)
       set_target_properties(turbojpeg PROPERTIES DEFINE_SYMBOL DLLDEFINE)
     endif()
@@ -771,7 +771,7 @@ if(WITH_TURBOJPEG)
       $<TARGET_OBJECTS:turbojpeg12-static>
       $<TARGET_OBJECTS:turbojpeg16-static>)
     set_property(TARGET turbojpeg-static PROPERTY COMPILE_FLAGS
-      "-DBMP_SUPPORTED -DPPM_SUPPORTED -DGIF_SUPPORTED -DTARGA_SUPPORTED") #modified
+      "-DBMP_SUPPORTED -DPPM_SUPPORTED") 
     if(NOT MSVC_LIKE)
       set_target_properties(turbojpeg-static PROPERTIES OUTPUT_NAME turbojpeg)
     endif()
