@@ -35,7 +35,7 @@
 
 #include "cdjpeg.h"             /* Common decls for cjpeg/djpeg applications */
 
-//#ifdef GIF_SUPPORTED
+#ifdef GIF_SUPPORTED
 
 
 /* Macros to deal with unsigned chars as efficiently as compiler allows */
@@ -714,4 +714,4 @@ jinit_read_gif(j_compress_ptr cinfo)
   return (cjpeg_source_ptr)source;
 }
 
-//#endif /* GIF_SUPPORTED */
+#endif /* GIF_SUPPORTED */
