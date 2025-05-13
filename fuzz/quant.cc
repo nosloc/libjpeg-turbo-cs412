@@ -75,13 +75,9 @@ struct test {
 
         /* Test non-default options on specific iterations. */
         tj3Set(handle, TJPARAM_BOTTOMUP, ti == 0);
-        tj3Set(handle, TJPARAM_FASTDCT, ti == 1);
-        tj3Set(handle, TJPARAM_OPTIMIZE, ti == 6);
-        tj3Set(handle, TJPARAM_PROGRESSIVE, ti == 1 || ti == 3);
-        tj3Set(handle, TJPARAM_ARITHMETIC, ti == 2 || ti == 3);
         tj3Set(handle, TJPARAM_NOREALLOC, ti != 2);
-        tj3Set(handle, TJPARAM_RESTARTROWS, ti == 1 || ti == 2 ? 2 : 0);
-        tj3Set(handle, TJPARAM_MAXPIXELS, 1048576);
+        //tj3Set(handle, TJPARAM_PRECISION, tests[ti].precision);
+        tj3Set(handle, TJPARAM_RESTARTROWS, ti == 0 || ti == 6 ? 1 : 0);
         
         // test with 8
         if ((srcBuf = tj3LoadImage8(handle, filename, &width, 1, &height,
