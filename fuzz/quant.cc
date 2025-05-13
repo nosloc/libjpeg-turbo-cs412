@@ -70,14 +70,14 @@ struct test {
         size_t dstSize = 0, maxBufSize, i, sum = 0;
 
         /* Test non-default compression options on specific iterations. */
-        //tj3Set(handle, TJPARAM_BOTTOMUP, ti == 0);
-        //tj3Set(handle, TJPARAM_FASTDCT, ti == 1);
-        //tj3Set(handle, TJPARAM_OPTIMIZE, ti == 6);
-        //tj3Set(handle, TJPARAM_PROGRESSIVE, ti == 1 || ti == 3);
-        //tj3Set(handle, TJPARAM_ARITHMETIC, ti == 2 || ti == 3);
-        //tj3Set(handle, TJPARAM_NOREALLOC, ti != 2);
-        //tj3Set(handle, TJPARAM_RESTARTROWS, ti == 1 || ti == 2 ? 2 : 0);
-        //tj3Set(handle, TJPARAM_MAXPIXELS, 1048576);
+        tj3Set(handle, TJPARAM_BOTTOMUP, ti == 0);
+        tj3Set(handle, TJPARAM_FASTDCT, ti == 1);
+        tj3Set(handle, TJPARAM_OPTIMIZE, ti == 6);
+        tj3Set(handle, TJPARAM_PROGRESSIVE, ti == 1 || ti == 3);
+        tj3Set(handle, TJPARAM_ARITHMETIC, ti == 2 || ti == 3);
+        tj3Set(handle, TJPARAM_NOREALLOC, ti != 2);
+        tj3Set(handle, TJPARAM_RESTARTROWS, ti == 1 || ti == 2 ? 2 : 0);
+        tj3Set(handle, TJPARAM_MAXPIXELS, 1048576);
         
         /* tj3LoadImage8() will refuse to load images larger than 1 Megapixel, so
         we don't need to check the width and height here. */
