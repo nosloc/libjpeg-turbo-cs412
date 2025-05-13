@@ -58,11 +58,11 @@ struct test {
         { TJPF_CMYK, TJSAMP_440, 40 }
     };
 
-    snprintf(filename, FILENAME_MAX, "/tmp/libjpeg-turbo_compress_fuzz.XXXXXX");
+    snprintf(filename, FILENAME_MAX, "/tmp/libjpeg-turbo_saveImage_fuzz.XXXXXX");
     if ((fd = mkstemp(filename)) < 0 || write(fd, data, size) < 0)
         goto bailout;
 
-    if ((handle = tj3Init(TJINIT_COMPRESS)) == NULL)
+    if ((handle = tj3Init(TJINIT_TRANSFORM)) == NULL)
         goto bailout;
 
     for (ti = 0; ti < NUMTESTS; ti++) {
@@ -70,37 +70,37 @@ struct test {
         size_t dstSize = 0, maxBufSize, i, sum = 0;
 
         /* Test non-default compression options on specific iterations. */
-        tj3Set(handle, TJPARAM_BOTTOMUP, ti == 0);
-        tj3Set(handle, TJPARAM_FASTDCT, ti == 1);
-        tj3Set(handle, TJPARAM_OPTIMIZE, ti == 6);
-        tj3Set(handle, TJPARAM_PROGRESSIVE, ti == 1 || ti == 3);
-        tj3Set(handle, TJPARAM_ARITHMETIC, ti == 2 || ti == 3);
-        tj3Set(handle, TJPARAM_NOREALLOC, ti != 2);
-        tj3Set(handle, TJPARAM_RESTARTROWS, ti == 1 || ti == 2 ? 2 : 0);
-
-        tj3Set(handle, TJPARAM_MAXPIXELS, 1048576);
+        //tj3Set(handle, TJPARAM_BOTTOMUP, ti == 0);
+        //tj3Set(handle, TJPARAM_FASTDCT, ti == 1);
+        //tj3Set(handle, TJPARAM_OPTIMIZE, ti == 6);
+        //tj3Set(handle, TJPARAM_PROGRESSIVE, ti == 1 || ti == 3);
+        //tj3Set(handle, TJPARAM_ARITHMETIC, ti == 2 || ti == 3);
+        //tj3Set(handle, TJPARAM_NOREALLOC, ti != 2);
+        //tj3Set(handle, TJPARAM_RESTARTROWS, ti == 1 || ti == 2 ? 2 : 0);
+        //tj3Set(handle, TJPARAM_MAXPIXELS, 1048576);
+        
         /* tj3LoadImage8() will refuse to load images larger than 1 Megapixel, so
         we don't need to check the width and height here. */
         if ((srcBuf = tj3LoadImage8(handle, filename, &width, 1, &height,
                                     &pf)) == NULL)
-        continue;
+            continue;
 
         dstSize = maxBufSize = tj3JPEGBufSize(width, height, tests[ti].subsamp);
         if (tj3Get(handle, TJPARAM_NOREALLOC)) {
-        if ((dstBuf = (unsigned char *)tj3Alloc(dstSize)) == NULL)
-            goto bailout;
+            if ((dstBuf = (unsigned char *)tj3Alloc(dstSize)) == NULL)
+                goto bailout;
         } else
-        dstBuf = NULL;
+            dstBuf = NULL;
 
-        tj3Set(handle, TJPARAM_SUBSAMP, tests[ti].subsamp);
-        tj3Set(handle, TJPARAM_QUALITY, tests[ti].quality);
-        if (tj3Compress8(handle, srcBuf, width, 0, height, pf, &dstBuf,
-                        &dstSize) == 0) {
+        //tj3Set(handle, TJPARAM_SUBSAMP, tests[ti].subsamp);
+        //tj3Set(handle, TJPARAM_QUALITY, tests[ti].quality);
+        //if (tj3Compress8(handle, srcBuf, width, 0, height, pf, &dstBuf,
+        //                &dstSize) == 0) {
         /* Touch all of the output pixels in order to catch uninitialized reads
             when using MemorySanitizer. */
-        for (i = 0; i < dstSize; i++)
-            sum += dstBuf[i];
-        }
+        //for (i = 0; i < dstSize; i++)
+        //    sum += dstBuf[i];
+        //}
         tj3SaveImage8(handle, filename, dstBuf, width, 0, height, pf);
         free(dstBuf);
         dstBuf = NULL;
@@ -109,18 +109,18 @@ struct test {
 
         /* Prevent the code above from being optimized out.  This test should never
         be true, but the compiler doesn't know that. */
-        if (sum > 255 * maxBufSize)
-        goto bailout;
+        //if (sum > 255 * maxBufSize)
+        //    goto bailout;
     }
 
     bailout:
-    free(dstBuf);
-    tj3Free(srcBuf);
-    if (fd >= 0) {
-        close(fd);
-        if (strlen(filename) > 0) unlink(filename);
-    }
-    tj3Destroy(handle);
-    return 0;
+        free(dstBuf);
+        tj3Free(srcBuf);
+        if (fd >= 0) {
+            close(fd);
+            if (strlen(filename) > 0) unlink(filename);
+        }
+        tj3Destroy(handle);
+        return 0;
  }
  
