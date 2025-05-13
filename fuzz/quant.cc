@@ -119,6 +119,7 @@ struct test {
         //tj3Set(handle, TJPARAM_LOSSLESS, 1);
         //tj3Set(handle, TJPARAM_LOSSLESSPSV, tests[ti].psv);
         //tj3Set(handle, TJPARAM_LOSSLESSPT, tests[ti].pt);
+        if (pf == TJPF_CMYK) continue;
         if ((srcBuf16 = tj3LoadImage16(handle, filename, &width, 1, &height,
                                      &pf)) == NULL)
             continue;
@@ -133,7 +134,7 @@ struct test {
         tj3SaveImage16(handle, filename, dstBuf16, width, 0, height, pf);
         free(dstBuf16);
         dstBuf16 = NULL;
-        tj3Free(srcBuf);
+        tj3Free(srcBuf16);
         srcBuf16 = NULL;
     }
 
