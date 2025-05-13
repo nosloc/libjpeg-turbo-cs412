@@ -116,10 +116,12 @@ struct test {
 
         // test with 16
         tj3Set(handle, TJPARAM_PRECISION, 16);
-        //tj3Set(handle, TJPARAM_LOSSLESS, 1);
+        tj3Set(handle, TJPARAM_LOSSLESS, 1);
         //tj3Set(handle, TJPARAM_LOSSLESSPSV, tests[ti].psv);
         //tj3Set(handle, TJPARAM_LOSSLESSPT, tests[ti].pt);
-        if (pf == TJPF_CMYK) continue;
+        if (pf == TJPF_CMYK){
+            continue;
+        }
         if ((srcBuf16 = tj3LoadImage16(handle, filename, &width, 1, &height,
                                      &pf)) == NULL)
             continue;
