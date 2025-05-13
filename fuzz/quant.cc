@@ -53,7 +53,7 @@ struct test {
     int width = 0, height = 0, fd = -1, ti;
     char filename[FILENAME_MAX] = { 0 };
     struct test tests[NUMTESTS] = {
-        { TJPF_RGB, TJSAMP_444, 100 },
+        { TJPF_RGB, TJSAMP_444, 100},
         { TJPF_BGR, TJSAMP_422, 90 },
         { TJPF_RGBX, TJSAMP_420, 80 },
         { TJPF_BGRA, TJSAMP_411, 70 },
@@ -76,10 +76,9 @@ struct test {
         /* Test non-default options on specific iterations. */
         tj3Set(handle, TJPARAM_BOTTOMUP, ti == 0);
         tj3Set(handle, TJPARAM_NOREALLOC, ti != 2);
-        //tj3Set(handle, TJPARAM_PRECISION, tests[ti].precision);
         tj3Set(handle, TJPARAM_RESTARTROWS, ti == 0 || ti == 6 ? 1 : 0);
         tj3Set(handle, TJPARAM_MAXPIXELS, 1048576);
-        
+
         // test with 8
         if ((srcBuf = tj3LoadImage8(handle, filename, &width, 1, &height,
                                      &pf)) == NULL)
@@ -116,6 +115,10 @@ struct test {
         srcBuf12 = NULL;
 
         // test with 16
+        tj3Set(handle, TJPARAM_PRECISION, 16);
+        //tj3Set(handle, TJPARAM_LOSSLESS, 1);
+        //tj3Set(handle, TJPARAM_LOSSLESSPSV, tests[ti].psv);
+        //tj3Set(handle, TJPARAM_LOSSLESSPT, tests[ti].pt);
         if ((srcBuf16 = tj3LoadImage16(handle, filename, &width, 1, &height,
                                      &pf)) == NULL)
             continue;
@@ -125,7 +128,7 @@ struct test {
             if ((dstBuf16 = (unsigned short *)tj3Alloc(dstSize)) == NULL)
                 goto bailout;
         } else
-            dstBuf12 = NULL;
+            dstBuf16 = NULL;
 
         tj3SaveImage16(handle, filename, dstBuf16, width, 0, height, pf);
         free(dstBuf16);
