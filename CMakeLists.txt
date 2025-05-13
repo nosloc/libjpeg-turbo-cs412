@@ -771,7 +771,7 @@ if(WITH_TURBOJPEG)
       $<TARGET_OBJECTS:turbojpeg12-static>
       $<TARGET_OBJECTS:turbojpeg16-static>)
     set_property(TARGET turbojpeg-static PROPERTY COMPILE_FLAGS
-      "-DBMP_SUPPORTED -DPPM_SUPPORTED")
+      "-DBMP_SUPPORTED -DPPM_SUPPORTED") 
     if(NOT MSVC_LIKE)
       set_target_properties(turbojpeg-static PROPERTIES OUTPUT_NAME turbojpeg)
     endif()
