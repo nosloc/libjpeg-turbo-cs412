@@ -46,6 +46,10 @@ struct test {
 
     tjhandle handle = NULL;
     unsigned char *srcBuf = NULL, *dstBuf = NULL;
+    short *srcBuf12 = NULL;
+    short *dstBuf12 = NULL;
+    unsigned short *srcBuf16 = NULL;
+    unsigned short *dstBuf16 = NULL;
     int width = 0, height = 0, fd = -1, ti;
     char filename[FILENAME_MAX] = { 0 };
     struct test tests[NUMTESTS] = {
@@ -69,7 +73,7 @@ struct test {
         int pf = tests[ti].pf;
         size_t dstSize = 0, maxBufSize, i, sum = 0;
 
-        /* Test non-default compression options on specific iterations. */
+        /* Test non-default options on specific iterations. */
         tj3Set(handle, TJPARAM_BOTTOMUP, ti == 0);
         tj3Set(handle, TJPARAM_FASTDCT, ti == 1);
         tj3Set(handle, TJPARAM_OPTIMIZE, ti == 6);
@@ -79,10 +83,9 @@ struct test {
         tj3Set(handle, TJPARAM_RESTARTROWS, ti == 1 || ti == 2 ? 2 : 0);
         tj3Set(handle, TJPARAM_MAXPIXELS, 1048576);
         
-        /* tj3LoadImage8() will refuse to load images larger than 1 Megapixel, so
-        we don't need to check the width and height here. */
+        // test with 8
         if ((srcBuf = tj3LoadImage8(handle, filename, &width, 1, &height,
-                                    &pf)) == NULL)
+                                     &pf)) == NULL)
             continue;
 
         dstSize = maxBufSize = tj3JPEGBufSize(width, height, tests[ti].subsamp);
@@ -92,35 +95,61 @@ struct test {
         } else
             dstBuf = NULL;
 
-        //tj3Set(handle, TJPARAM_SUBSAMP, tests[ti].subsamp);
-        //tj3Set(handle, TJPARAM_QUALITY, tests[ti].quality);
-        //if (tj3Compress8(handle, srcBuf, width, 0, height, pf, &dstBuf,
-        //                &dstSize) == 0) {
-        /* Touch all of the output pixels in order to catch uninitialized reads
-            when using MemorySanitizer. */
-        //for (i = 0; i < dstSize; i++)
-        //    sum += dstBuf[i];
-        //}
         tj3SaveImage8(handle, filename, dstBuf, width, 0, height, pf);
         free(dstBuf);
         dstBuf = NULL;
         tj3Free(srcBuf);
         srcBuf = NULL;
+        
+        // test with 12
+        if ((srcBuf12 = tj3LoadImage12(handle, filename, &width, 1, &height,
+                                     &pf)) == NULL)
+            continue;
 
-        /* Prevent the code above from being optimized out.  This test should never
-        be true, but the compiler doesn't know that. */
-        //if (sum > 255 * maxBufSize)
-        //    goto bailout;
+        dstSize = maxBufSize = tj3JPEGBufSize(width, height, tests[ti].subsamp);
+        if (tj3Get(handle, TJPARAM_NOREALLOC)) {
+            if ((dstBuf12 = (short *)tj3Alloc(dstSize)) == NULL)
+                goto bailout;
+        } else
+            dstBuf12 = NULL;
+
+        tj3SaveImage12(handle, filename, dstBuf12, width, 0, height, pf);
+        free(dstBuf12);
+        dstBuf12 = NULL;
+        tj3Free(srcBuf12);
+        srcBuf12 = NULL;
+
+        // test with 16
+        if ((srcBuf16 = tj3LoadImage16(handle, filename, &width, 1, &height,
+                                     &pf)) == NULL)
+            continue;
+
+        dstSize = maxBufSize = tj3JPEGBufSize(width, height, tests[ti].subsamp);
+        if (tj3Get(handle, TJPARAM_NOREALLOC)) {
+            if ((dstBuf16 = (unsigned short *)tj3Alloc(dstSize)) == NULL)
+                goto bailout;
+        } else
+            dstBuf12 = NULL;
+
+        tj3SaveImage16(handle, filename, dstBuf16, width, 0, height, pf);
+        free(dstBuf16);
+        dstBuf16 = NULL;
+        tj3Free(srcBuf);
+        srcBuf16 = NULL;
     }
 
-    bailout:
-        free(dstBuf);
-        tj3Free(srcBuf);
-        if (fd >= 0) {
-            close(fd);
-            if (strlen(filename) > 0) unlink(filename);
-        }
-        tj3Destroy(handle);
-        return 0;
+bailout:
+    free(dstBuf);
+    tj3Free(srcBuf);
+    free(dstBuf12);
+    tj3Free(srcBuf12);
+    free(dstBuf16);
+    tj3Free(srcBuf16);
+    if (fd >= 0) {
+        close(fd);
+        if (strlen(filename) > 0) unlink(filename);
+    }
+    tj3Destroy(handle);
+    return 0;
  }
  
