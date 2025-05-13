@@ -88,7 +88,7 @@ struct test {
             tj3Free(srcBuf);
             srcBuf = NULL;
             continue;
-}
+        }
         dstSize = maxBufSize = tj3JPEGBufSize(width, height, tests[ti].subsamp);
         if (tj3Get(handle, TJPARAM_NOREALLOC)) {
             if ((dstBuf = (unsigned char *)tj3Alloc(dstSize)) == NULL)
@@ -110,7 +110,7 @@ struct test {
             tj3Free(srcBuf12);
             srcBuf12 = NULL;
             continue;
-
+        }
         dstSize = maxBufSize = tj3JPEGBufSize(width, height, tests[ti].subsamp);
         if (tj3Get(handle, TJPARAM_NOREALLOC)) {
             if ((dstBuf12 = (short *)tj3Alloc(dstSize)) == NULL)
@@ -132,6 +132,7 @@ struct test {
             tj3Free(srcBuf16);
             srcBuf16 = NULL;
             continue;
+        }
         dstSize = maxBufSize = tj3JPEGBufSize(width, height, tests[ti].subsamp);
         if (tj3Get(handle, TJPARAM_NOREALLOC)) {
             if ((dstBuf16 = (unsigned short *)tj3Alloc(dstSize)) == NULL)
