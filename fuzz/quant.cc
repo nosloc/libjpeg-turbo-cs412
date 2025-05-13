@@ -26,24 +26,113 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
- #include <turbojpeg.h>
- #include <stdlib.h>
- #include <stdint.h>
+#include <turbojpeg.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
  
- 
- #define NUMPF  3
- 
+#define NUMTESTS  7
+
+
+struct test {
+  enum TJPF pf;
+  enum TJSAMP subsamp;
+  int quality;
+};
  
  extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
  {
-   tjhandle handle = tj3Init(TJINIT_COMPRESS);
-    if (!handle) {
-        return 0; // Initialization failed, nothing to test
+    if (size < 10) return 0; // Need some data for both ICC and image
+
+    // Split the input data (adjust split logic as needed)
+    size_t icc_size = size / 3;
+    const uint8_t *icc_data = data;
+    const uint8_t *image_data = data + icc_size;
+    size_t image_size = size - icc_size;
+
+
+    // Now, try to compress an image with the second part of the input
+    tjhandle handle = NULL;
+    unsigned char *srcBuf = NULL, *dstBuf = NULL;
+    int width = 0, height = 0, fd = -1, ti;
+    char filename[4096] = { 0 };
+    struct test tests[NUMTESTS] = {
+    { TJPF_RGB, TJSAMP_444, 100 },
+    { TJPF_BGR, TJSAMP_422, 90 },
+    { TJPF_RGBX, TJSAMP_420, 80 },
+    { TJPF_BGRA, TJSAMP_411, 70 },
+    { TJPF_XRGB, TJSAMP_GRAY, 60 },
+    { TJPF_GRAY, TJSAMP_GRAY, 50 },
+    { TJPF_CMYK, TJSAMP_440, 40 }
+    };
+
+    snprintf(filename, FILENAME_MAX, "/tmp/libjpeg-turbo_compress_fuzz.XXXXXX");
+    if ((fd = mkstemp(filename)) < 0 || write(fd, image_data, image_size) < 0)
+      goto bailout;
+
+    if ((handle = tj3Init(TJINIT_COMPRESS)) == NULL)
+      goto bailout;
+
+    // Set the ICC profile with the first part of the fuzzer input
+    tj3SetICCProfile(handle, const_cast<unsigned char*>(icc_data), icc_size);
+
+    for (ti = 0; ti < NUMTESTS; ti++) {
+      int pf = tests[ti].pf;
+      size_t dstSize = 0, maxBufSize, i, sum = 0;
+
+      /* Test non-default compression options on specific iterations. */
+      tj3Set(handle, TJPARAM_BOTTOMUP, ti == 0);
+      tj3Set(handle, TJPARAM_FASTDCT, ti == 1);
+      tj3Set(handle, TJPARAM_OPTIMIZE, ti == 6);
+      tj3Set(handle, TJPARAM_PROGRESSIVE, ti == 1 || ti == 3);
+      tj3Set(handle, TJPARAM_ARITHMETIC, ti == 2 || ti == 3);
+      tj3Set(handle, TJPARAM_NOREALLOC, ti != 2);
+      tj3Set(handle, TJPARAM_RESTARTROWS, ti == 1 || ti == 2 ? 2 : 0);
+
+      tj3Set(handle, TJPARAM_MAXPIXELS, 1048576);
+      /* tj3LoadImage8() will refuse to load images larger than 1 Megapixel, so
+        we don't need to check the width and height here. */
+      if ((srcBuf = tj3LoadImage8(handle, filename, &width, 1, &height,
+                                  &pf)) == NULL)
+        continue;
+
+      dstSize = maxBufSize = tj3JPEGBufSize(width, height, tests[ti].subsamp);
+      if (tj3Get(handle, TJPARAM_NOREALLOC)) {
+        if ((dstBuf = (unsigned char *)tj3Alloc(dstSize)) == NULL)
+          goto bailout;
+      } else
+        dstBuf = NULL;
+      
+      tj3Set(handle, TJPARAM_SUBSAMP, tests[ti].subsamp);
+      tj3Set(handle, TJPARAM_QUALITY, tests[ti].quality);
+      if (tj3Compress8(handle, srcBuf, width, 0, height, pf, &dstBuf,
+                     &dstSize) == 0) {
+      /* Touch all of the output pixels in order to catch uninitialized reads
+         when using MemorySanitizer. */
+        for (i = 0; i < dstSize; i++)
+          sum += dstBuf[i];
+      }
+
+      free(dstBuf);
+      dstBuf = NULL;
+      tj3Free(srcBuf);
+      srcBuf = NULL;
+
+      /* Prevent the code above from being optimized out.  This test should never
+        be true, but the compiler doesn't know that. */
+      if (sum > 255 * maxBufSize)
+        goto bailout;
     }
 
-    // Provide the fuzzer data as the ICC buffer and size
-    tj3SetICCProfile(handle, const_cast<unsigned char*>(data), size);
-
+  bailout:
+    free(dstBuf);
+    tj3Free(srcBuf);
+    if (fd >= 0) {
+      close(fd);
+      if (strlen(filename) > 0) unlink(filename);
+    }
     tj3Destroy(handle);
     return 0;
  }
