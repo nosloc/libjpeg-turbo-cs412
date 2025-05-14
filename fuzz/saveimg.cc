@@ -118,7 +118,6 @@ struct test {
         tj3Set(handle, TJPARAM_PRECISION, 16);
         if ((srcBuf16 = tj3LoadImage16(handle, filename, &width, 1, &height,
                                      &pf)) == NULL){
-            //fprintf(stderr, "tj3LoadImage16 Error: %s\n", tj3GetErrorStr(handle));
             continue;
         }
             
